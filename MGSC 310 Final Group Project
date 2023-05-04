@@ -12,3 +12,19 @@ glimpse(wine)
 lasso_mod <- cv.glmnet(quality ~ .,
                        data = wine_train, 
                        alpha = 1)
+                       
+plot(lasso_mod)
+
+# print the two model suggested values of lambda:
+print(lasso_mod$lambda.min)
+#
+print(lasso_mod$lambda.1se)
+
+# to examine the coefficients we must say what value of 
+# lambda we want to use.
+coef(lasso_mod, s = lasso_mod$lambda.min) %>% 
+  round(3)
+
+# print coefficient using lambda.1se
+coef(lasso_mod, s = lasso_mod$lambda.1se) %>% 
+  round(3)
