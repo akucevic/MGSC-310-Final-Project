@@ -139,7 +139,19 @@ ggplot(data = wine_train, aes(x = alcohol, y = quality)) +
 
 
 
+###################
 
+logit1 <- glm(default ~ balance,
+              data = Default_train,
+              family = binomial)
+summary(logit1)
+
+#exponentiate the coefficients
+exp(logit1$coefficients)
+
+#exp(balance)=1.006
+#1.006-1=0.006
+# if you increase balance <- 0.6% increase im odds of defaulting
 
 
 
