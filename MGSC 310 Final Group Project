@@ -28,3 +28,119 @@ coef(lasso_mod, s = lasso_mod$lambda.min) %>%
 # print coefficient using lambda.1se
 coef(lasso_mod, s = lasso_mod$lambda.1se) %>% 
   round(3)
+
+
+
+
+
+
+
+
+# Linear Regression Model and Analysis
+wine <- read.csv("datasets/winequality-red.csv")
+library(tidyverse)
+
+wine %>% glimpse()
+wine %>% summary()
+
+
+
+
+# load libraries
+library(ISLR)
+library(rsample)
+# use Credit data
+data(wine)
+
+# check out the description
+?wine # do not use in markdown
+
+# explore the data set
+wine %>% glimpse()
+wine %>% summary()
+wine %>% dim()
+# Explore the relationship between Wine Quality and the predictors
+
+
+library(ggplot2)
+(ggplot(wine, aes(x = fixed.acidity , y = quality)) + geom_bar()) 
+
+
+# Estimate a linear regression model
+
+# lm(formula, data)
+# y ~ x
+
+wine_model <- lm(quality ~ ., data = wine)
+wine_model
+summary(wine_model)
+
+coef(wine_model)
+
+# prediction
+y_hat <- predict(wine_model)
+
+# add the prediction to the dataframe
+wine_pred <- 
+  wine %>% mutate(yhat = y_hat) 
+
+# check out the actual balance vs the predicted ones
+wine_pred %>% select(quality,yhat) %>% slice(1:10)
+
+# calculate error and save it in another column
+wine_pred <-
+  Credit_pred %>% mutate(e = wine - yhat)
+
+# report the error
+wine_pred %>%
+  select(quality, yhat, e) %>% 
+  slice(1:10)
+
+
+# Data splitting
+set.seed(310)
+w <- runif(5)
+w
+
+# Training sets (70%) and Test set (30%)
+set.seed(310)
+wine_split <- initial_split(wine, prop = 0.7)
+wine_train <- training(wine_split)
+wine_test <- testing(wine_split)
+
+# Check the dimensions for test and training
+dim(wine_split)
+
+wine_train %>% head()
+
+# Train the model
+# Wine ~ All of the predictors (.,)
+wine_m <- lm(quality ~ ., data = wine_train)
+# Always use the training set not the test!
+
+summary(wine_m)
+
+# Prediction
+# in-sample prediction (training)
+wine_quality_train <- predict(wine_m)
+
+# out-of-sample prediction (test)
+wine_quality_test <- predict(wine_m, newdata = wine_test)
+
+
+wine_quality_train %>% head()
+wine_quality_test %>% head()
+
+
+
+library(ggplot2)
+ggplot(data = wine_train, aes(x = alcohol, y = quality)) +
+  geom_bar()
+
+
+
+
+
+
+
+
