@@ -1,1 +1,14 @@
 
+library(tidyverse)
+
+wine <- read.csv("datasets/winequality-red.csv")
+
+wine %>% head()
+dim(wine)
+summary(wine)
+glimpse(wine)
+
+
+lasso_mod <- cv.glmnet(quality ~ .,
+                       data = wine_train, 
+                       alpha = 1)
