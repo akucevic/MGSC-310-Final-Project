@@ -1,0 +1,443 @@
+wine <- read.csv("datasets/winequality-red.csv")
+library(tidyverse)
+
+wine %>% glimpse()
+wine %>% summary()
+
+
+
+
+# load libraries
+library(ISLR)
+library(rsample)
+
+
+
+# check out the description
+?wine # do not use in markdown
+
+# explore the data set
+wine %>% glimpse()
+wine %>% summary()
+wine %>% dim()
+# Explore the relationship between Wine Quality and the predictors
+
+
+library(ggplot2)
+(ggplot(wine, aes(x = alcohol , y = quality)) + geom_point()+ geom_smooth(method = "lm")) 
+
+
+# Estimate a linear regression model
+
+# lm(formula, data)
+# y ~ x
+
+wine_model <- lm(quality ~ ., data = wine)
+wine_model
+summary(wine_model)
+
+coef(wine_model)
+
+# prediction
+y_hat <- predict(wine_model)
+
+# add the prediction to the dataframe
+wine_pred <- 
+  wine %>% mutate(yhat = y_hat) 
+
+# check out the actual quality vs the predicted one
+wine_pred %>% select(quality,yhat) %>% slice(1:10)
+
+# calculate error and save it in another column
+wine_pred <-
+  wine_pred %>% mutate(e = wine - yhat)
+
+# report the error
+wine_pred %>%
+  select(quality, yhat, e) %>% 
+  slice(1:10)
+
+
+# Data splitting
+set.seed(310)
+w <- runif(5)
+w
+
+# Training sets (70%) and Test set (30%)
+set.seed(310)
+wine_split <- initial_split(wine, prop = 0.7)
+wine_train <- training(wine_split)
+wine_test <- testing(wine_split)
+
+# Check the dimensions for test and training
+dim(wine_split)
+
+wine_train %>% head()
+
+# Train the model
+# Wine ~ All of the predictors (.,)
+wine_m <- lm(quality ~ ., data = wine_train)
+# Always use the training set not the test!
+
+summary(wine_m)
+
+# Prediction
+# in-sample prediction (training)
+wine_quality_train <- predict(wine_m)
+
+# out-of-sample prediction (test)
+wine_quality_test <- predict(wine_m, newdata = wine_test)
+
+
+wine_quality_train %>% head()
+wine_quality_train %>% glimpse()
+wine_quality_test %>% head()
+
+
+
+library(ggplot2)
+ggplot(data = wine_train, aes(x = alcohol), size = 75) +
+  geom_bar(stat = "count")
+
+ggplot(data = wine_train, aes(x = quality), size = 75) +
+  geom_bar(stat = "count")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#------------------------------------------------
+### Regression Tree
+#------------------------------------------------
+library(tidyverse)
+install.packages("tree")
+library(tree)
+
+# Load Hitters data from ISLR
+library(ISLR)
+
+# Check for missing values
+colSums(is.na(wine))
+
+# Do necessary data transformation:
+#   - dropping missing
+
+
+# Training sets (70%) and Test set (30%)
+library(rsample)
+set.seed(310)
+wine_split <- initial_split(wine, prop = 0.7)
+wine_train <- training(wine_split)
+wine_test <- testing(wine_split)
+
+
+# Train the tree
+# outcome: Salary
+# predictors: AtBat + Hits + HmRun + RBI + Walks + Years + Division + Assists + Errors
+tree_mod <- tree(quality ~ .,
+                 data = wine_train)
+
+# Report the results
+summary(tree_mod)
+# Print the tree structure
+print(tree_mod)
+
+
+# Plot the tree
+plot(tree_mod)
+# Options for text function:
+text(tree_mod, pretty = 0, cex = 0.75)
+# pretty: Clean up the factor variables
+# cex: change the font size
+# digit: change the number of decimal place
+
+
+
+
+# Predict Salary for the train and test
+# Train set
+predicted_wine_train <- predict(tree_mod, newdata = wine_train)
+
+# Test set
+predicted_wine_test <- predict(tree_mod, newdata = wine_test)
+
+
+
+
+# Measure MSE test
+library(caret)
+
+RMSE(predicted_wine_train, wine_train$quality)
+# On average you're making $264,000 error
+
+RMSE(predicted_wine_test, wine_test$quality)
+
+# Since our test error is greater than our train error we have an overfit model
+# We have to prune our tree model in this case
+
+# cross-validation to find best tree size
+cv.wine <- cv.tree(tree_mod) # Takes different sizes of trees and gives you a 
+# cross-validation error of every tree
+
+
+
+# report the results
+print(cv.wine)
+
+
+?randomForest
+
+# find the best tree size
+plot(cv.wine$size, cv.wine$dev, type="b")
+
+
+# alternative way
+cv_quality <- data.frame(
+  tree_size = cv.wine$size,
+  error = cv.wine$dev
+)
+
+print(cv_quality)
+ggplot(cv_quality, aes(tree_size, error)) + 
+  geom_point() + geom_line()
+
+
+
+
+
+# prune the tree by the best size
+pruned_tree <- prune.tree(tree_mod, best = 10)
+
+# plot the pruned tree
+plot(pruned_tree)
+text(pruned_tree)
+
+
+# Predict the test
+predicted_pruned_test <- predict(pruned_tree, newdata = wine_test)
+RMSE(predicted_pruned_test, wine_test$quality)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#------------------------------------------------
+### Random Forest
+#------------------------------------------------
+# using Boston data
+
+library(MASS)
+library(tidyverse)
+
+
+#install.packages("randomForest")
+library(randomForest)
+
+
+
+wine %>% glimpse()
+library(rsample)
+set.seed(310)
+wine_split <- initial_split(wine, prop = 0.7)
+wine_train <- training(wine_split)
+wine_test <- testing(wine_split)
+
+wine_split %>% dim()
+
+
+
+# using random forest function with mtry = p
+bag_wine <- randomForest(quality ~ .,
+                           data = wine_train,
+                           ntree = 500, 
+                           mtry = 3,
+                           nodesize = 120,
+                           err.rate = 0.1,
+                           importance = TRUE)
+?randomForest
+
+print(bag_wine)
+plot(bag_wine)
+
+
+
+
+
+
+
+# performance of the model
+predicted_wine_train <- predict(bag_wine, newdata = wine_train)
+predicted_wine_train
+plot(predicted_wine_train)
+
+predicted_wine_test <- predict(bag_wine, newdata = wine_test)
+
+library(caret)
+RMSE(predicted_wine_train, wine_train$quality)
+RMSE(predicted_wine_test, wine_test$quality) # RMSE = 2.11, 2.11k in this case
+#------------------------------------------------
+### Variable Importance
+#------------------------------------------------
+# importance
+importance(bag_wine)
+# importance plot
+varImpPlot(bag_wine)
+#------------------------------------------------
+### Random Forest Explanations
+#------------------------------------------------
+
+#install.packages("randomForestExplainer")
+library(randomForestExplainer)
+library(ggplot2)
+
+# plot min depth distribution
+plot_min_depth_distribution(bag_wine) # Indication of the importance of the variable
+# plot variable two-way importance measure
+plot_multi_way_importance(bag_wine)
+# plot variable two-way importance measure
+# change x to "mse_increase" and y to "node_purity_increase"
+plot_multi_way_importance(bag_wine, x_measure = "mse_increase",
+                          y_measure = "node_purity_increase")
+# plot two variables interaction effect: lstat and rm
+plot_predict_interaction(rf, Boston_train, "lstat", "rm")
+
+# explanation file 
+explain_forest(bag_wine, interactions=TRUE, data=wine_train)
+# Less trees means that the variable is more important since it's at the top part of
+# the tree
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# Logistic Regression Model
+
+# Build a logistic (logit) model:
+# wine ~ quality
+
+
+
+# Recode "quality" into binary variables "is_good" and "is_bad"
+
+# Subset wine dataset to only include rows present in wine_train dataset
+wine_sub <- wine[wine$quality %in% wine_train$quality,]
+
+# Recode "quality" into binary variables "is_good" and "is_bad"
+wine_clean <- wine %>% 
+  mutate(quality = factor(quality))
+
+# Training sets (70%) and Test set (30%)
+set.seed(310)
+wine_clean_split <- initial_split(wine_clean, prop = 0.7)
+wine_clean_train <- training(wine_clean_split)
+wine_clean_test <- testing(wine_clean_split)
+# Fit logistic regression model
+wine_logit <- glm(wine_clean ~ .,
+                  data = wine_clean_train,
+                  family = binomial)
+summary(wine_logit)
+
+# exponentiate the coefficients
+exp(wine_logit$coefficients)
+
+# exp(balance) = 1.006 (Odds Ratio)
+# 1.006 - 1 = 0.006
+# if you increase balance -> increase in the odds of defaulting
+
+# prediction: scoring (prediction of probabilities)
+scores_train <- predict(wine_logit, type = 'response')
+
+head(scores_train)
+
+# reformat my results into a dataframe
+results_train <- wine_sub %>% 
+  mutate(score = scores_train)  
+
+results_train %>% glimpse()
+
+# create a scatter plot showing the predicted probs (scores)
+# versus quality
+ggplot(results_train, aes(x = quality, y = score)) + 
+  geom_point() +
+  labs(title = "Predicted Probabilties of Wine Quality")
+
+
+
+# same plot with different  for defaulting and non-defaulting
+ggplot(results_train, aes(x = quality, y = score, color = default)) +
+  geom_point(size = 3) +
+  labs(title = "Predicted Probabilities of Wine Quality")
+
+
+
