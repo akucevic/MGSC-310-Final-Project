@@ -1,0 +1,101 @@
+wine <- read.csv("winequality-red.csv")
+library(tidyverse)
+library(tree)
+library(caret)
+library(ISLR)
+library(rsample)
+
+
+wine %>% glimpse()
+wine %>% summary()
+
+table(wine$quality)
+
+# Show the updated data frame
+table(wine$quality)
+
+set.seed(310)
+wine_split <- initial_split(wine, prop=0.7)
+wine_train <- training(wine_split)
+wine_test <- testing(wine_split)
+
+dim(wine_split)
+
+tree_wine <- tree(quality ~ .,
+                 data = wine_train)
+
+# Report the results
+# summary(tree_wine)
+
+print(tree_wine)
+
+plot(tree_wine)
+text(tree_wine, pretty = 0, cex = 0.5)
+
+predicted_quality_train <- predict(tree_wine, newdata = wine_train)
+# testing
+predicted_quality_test <- predict(tree_wine, newdata = wine_test)
+
+RMSE(predicted_quality_train, wine_train$quality)
+
+RMSE(predicted_quality_test, wine_test$quality)
+
+cv.wine <- cv.tree(tree_wine)
+# report the results
+print(cv.wine)
+
+plot(cv.wine$size, cv.wine$dev, type="b")
+
+cv_results <- data.frame(
+  tree_size = cv.wine$size,
+  error = cv.wine$dev
+)
+
+print(cv_results)
+
+#pruned_tree <- prune.tree(tree_wine, best = 8)
+
+
+
+# plot the pruned tree
+#plot(pruned_tree)
+#text(pruned_tree,pretty = 0, cex = 0.5)
+
+
+hist(wine$quality, main = "Distribution of Numbers 3-8", xlab = "Value", ylab = "Frequency")
+
+
+#predicted_pruned_quality_train <- predict(pruned_tree, newdata = wine_train)
+# testing
+#predicted_pruned_quality_test <- predict(pruned_tree, newdata = wine_test)
+
+#RMSE(predicted_pruned_quality_train, wine_train$quality)
+
+#RMSE(predicted_pruned_quality_test, wine_test$quality)
+
+# Define the threshold values
+thresh_values <- c(5, 7)
+
+# Loop over the threshold values and winsorize the data
+#for (i in 1:length(thresh_values)) {
+#  upper_thresh <- thresh_values[i]
+#  winsorized_data <- ifelse(wine$quality > upper_thresh, upper_thresh, wine$quality)
+#  data <- winsorized_data
+#}
+
+table(wine$quality)
+
+wine <- wine %>%
+  mutate( quality = case_when(
+    quality %in% c(3, 4,5) ~ "bad",
+    quality == 6 ~ "medium",
+    quality %in% c(7, 8) ~ "good"
+  ))
+
+
+# Show the updated data frame
+table(wine$quality)
+
+
+
+```
