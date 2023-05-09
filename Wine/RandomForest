@@ -1,0 +1,71 @@
+# random forest
+
+library(randomForest)
+
+library(tidyverse)
+library(rsample)
+
+library(randomForestExplainer)
+library(ggplot2)
+
+wine <- read.csv("winequality-red.csv")
+
+# random forest with mtry = 4
+
+wine %>% glimpse()
+
+set.seed(310)
+wine_split <- initial_split(wine, prop = 0.7)
+wine_train <- training(wine_split)
+wine_test <- testing(wine_split)
+
+dim(wine_split)
+
+
+bag_wine <- randomForest(quality ~ ., 
+                           data = wine_train,
+                           ntree = 500,
+                           mtry = 3,
+                          maxdepth = 10,
+                         nodesize = 200,
+                         min_samples_split = 200,
+                         min_samples_leaf = 100,
+                         max_features = 3,
+                         n_estimators = 2,
+                           importance = TRUE)
+
+print(bag_wine)
+plot(bag_wine)
+
+
+# performance of the model
+
+predicted_forest_wine_train <- predict(bag_wine, newdata = wine_train)
+
+predicted_forest_wine_test <- predict(bag_wine, newdata = wine_test)
+
+
+
+library(caret)
+
+# movies_test %>% glimpse()
+
+RMSE(predicted_forest_wine_train, wine_train$quality)
+
+RMSE(predicted_forest_wine_test, wine_test$quality)
+
+importance(bag_wine, type = 1)
+
+
+
+# plot min depth distribution
+ plot_min_depth_distribution(bag_wine)
+# plot variable two-way importance measure
+plot_multi_way_importance(bag_wine)
+`# plot variable two-way importance measure
+# change x to "mse_increase" and y to "node_purity_increase"
+#plot_multi_way_importance(bag_wine, x_measure = "mse_increase",
+                         # y_measure = "node_purity_increase")
+# plot two variables interaction effect: lstat and rm
+#plot_predict_interaction(bag_wine, wine_train, "lstat", "rm")
+```
