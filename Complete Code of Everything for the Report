@@ -131,7 +131,8 @@ wine_split %>% dim()
 
 
 # using random forest function with mtry = p
-bag_wine <- randomForest(quality ~ .,
+bag_wine <- randomForest(quality ~ volatile.acidity + chlorides + free.sulfur.dioxide
+                         + total.sulfur.dioxide + pH + sulphates + alcohol,
                            data = wine_train,
                            ntree = 500, 
                            mtry = 3,
