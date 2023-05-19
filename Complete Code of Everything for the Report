@@ -193,7 +193,59 @@ explain_forest(bag_wine, interactions=TRUE, data=wine_train)
 # Less trees means that the variable is more important since it's at the top part of
 # the tree
 
+------------------------------------------------------------
+LASSO CODE:
 
+library(tidyverse)
+
+wine <- read.csv("datasets/winequality-red.csv")
+
+wine %>% head()
+dim(wine)
+summary(wine)
+glimpse(wine)
+
+
+lasso_mod <- cv.glmnet(quality ~ .,
+                       data = wine_train, 
+                       alpha = 1)
+
+plot(lasso_mod)
+
+# print the two model suggested values of lambda:
+print(lasso_mod$lambda.min)
+#
+print(lasso_mod$lambda.1se)
+
+# to examine the coefficients we must say what value of 
+# lambda we want to use.
+coef(lasso_mod, s = lasso_mod$lambda.min) %>% 
+  round(3)
+
+# print coefficient using lambda.1se
+coef(lasso_mod, s = lasso_mod$lambda.1se) %>% 
+  round(3)
+
+ggplot(wine, aes(x = fixed.acidity, y = quality)) +
+  geom_bar(stat = "summary", fun.y = "mean") +
+  labs(title = "Fixed Acidity vs Quality")
+
+
+ggplot(wine, aes(x = fixed.acidity, y = quality)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  labs(title = "Fixed Acidity vs Quality")
+
+
+<- ggplot(wine,aes(x=fixed.acidity,y=quality))+
+  geom_bar()+
+  labs(title="The Relationship Between Fixed Acidity and Quality",
+       x="Fixed Acidity", y="Quality")
+
+ggplot(University,aes(x=GRE,y=GPA,))+
+  geom_point()+
+  geom_smooth(method="lm")+
+  facet_wrap(~department)
 
 
 
